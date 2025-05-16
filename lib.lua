@@ -1,13 +1,6 @@
 _G.Color = Color3.fromRGB(0, 0, 255)
 _G.Logo = 14714307716
 
-do  
-	local ui = game:GetService("CoreGui"):FindFirstChild("UILibrary") 
-	 if ui then 
-		ui:Destroy() 
-	end 
-end
-
 local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
