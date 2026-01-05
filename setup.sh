@@ -6,7 +6,6 @@ sleep 1
 ###############################
 clear
 echo "[0/12] Verificando dependências essenciais..."
-# Atualiza repositórios
 apt update && apt upgrade -y
 
 # Instala pacotes básicos
@@ -78,22 +77,28 @@ sleep 1
 ###############################
 clear
 echo "[5/12] Atualizando Arch e instalando pacotes básicos..."
-proot-distro exec archlinux -- pacman -Syu --noconfirm
-proot-distro exec archlinux -- pacman -S sudo nano curl git fish --noconfirm
+proot-distro login archlinux --user root -- bash -c "
+pacman -Syu --noconfirm &&
+pacman -S sudo nano curl git fish --noconfirm
+"
 sleep 1
 
 ###############################
 clear
 echo "[6/12] Instalando bun runtime..."
-proot-distro exec archlinux -- bash -c "curl -fsSL https://bun.sh/install | bash"
-proot-distro exec archlinux -- bash -c "echo 'export PATH=\$HOME/.bun/bin:\$PATH' >> /etc/fish/config.fish"
+proot-distro login archlinux --user root -- bash -c "
+curl -fsSL https://bun.sh/install | bash &&
+echo 'export PATH=\$HOME/.bun/bin:\$PATH' >> /etc/fish/config.fish
+"
 sleep 1
 
 ###############################
 clear
 echo "[7/12] Criando usuário $USERNAME..."
-proot-distro exec archlinux -- useradd -m -s /usr/bin/fish "$USERNAME"
-proot-distro exec archlinux -- usermod -aG sudo "$USERNAME"
+proot-distro login archlinux --user root -- bash -c "
+useradd -m -s /usr/bin/fish $USERNAME &&
+usermod -aG sudo $USERNAME
+"
 
 # Definir usuário como padrão da distro
 PROOT_CONF="$HOME/.proot-distro/archlinux.sh"
@@ -108,32 +113,33 @@ if [[ "$ASKPASS" == "s" || "$ASKPASS" == "S" ]]; then
   read -s -p "Confirmar senha: " PASS2
   echo
   if [[ "$PASS1" == "$PASS2" ]]; then
-    proot-distro exec archlinux -- bash -c "echo '$USERNAME:$PASS1' | chpasswd"
+    proot-distro login archlinux --user root -- bash -c "echo '$USERNAME:$PASS1' | chpasswd"
     echo "Senha definida com sucesso."
   else
     echo "❌ Senhas não conferem. Usuário criado sem senha."
-    proot-distro exec archlinux -- passwd -d "$USERNAME"
+    proot-distro login archlinux --user root -- bash -c "passwd -d $USERNAME"
   fi
 else
-  proot-distro exec archlinux -- passwd -d "$USERNAME"
-  echo "Usuário criado sem senha."
+  proot-distro login archlinux --user root -- bash -c "passwd -d $USERNAME"
 fi
 sleep 1
 
 ###############################
 clear
-echo "[8/12] Baixando repositório test e copiando para fastfetch config..."
-proot-distro exec archlinux -- mkdir -p /home/"$USERNAME"/.config/fastfetch
-git clone https://github.com/lzxv2/test /tmp/testrepo
-proot-distro exec archlinux -- cp -r /tmp/testrepo/* /home/"$USERNAME"/.config/fastfetch/
-proot-distro exec archlinux -- chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.config/fastfetch/
+echo "[8/12] Baixando repositório test e configurando fastfetch dentro do Arch..."
+proot-distro login archlinux --user root -- bash -c "
+git clone https://github.com/lzxv2/test /tmp/testrepo &&
+mkdir -p /home/$USERNAME/.config/fastfetch &&
+cp -r /tmp/testrepo/* /home/$USERNAME/.config/fastfetch/ &&
+chown -R $USERNAME:$USERNAME /home/$USERNAME/.config/fastfetch/ &&
 rm -rf /tmp/testrepo
+"
 sleep 1
 
 ###############################
 clear
 echo "[9/12] Definindo fish como shell padrão e login automático..."
-proot-distro exec archlinux -- chsh -s /usr/bin/fish "$USERNAME"
+proot-distro login archlinux --user root -- bash -c "chsh -s /usr/bin/fish $USERNAME"
 grep -qxF "proot-distro login archlinux --user $USERNAME" ~/.bashrc || \
     echo "proot-distro login archlinux --user $USERNAME" >> ~/.bashrc
 sleep 1
@@ -141,7 +147,6 @@ sleep 1
 ###############################
 clear
 echo "[10/12] Limpeza e finalizações..."
-# Nenhum comando adicional por enquanto
 sleep 1
 
 ###############################
