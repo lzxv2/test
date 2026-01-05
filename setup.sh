@@ -3,6 +3,24 @@
 echo "=== Setup Arch Linux (proot-distro) ==="
 sleep 1
 
+###############################
+clear
+echo "[0/11] Verificando dependências essenciais..."
+# Atualiza repositórios
+apt update && apt upgrade -y
+
+# Instala proot-distro, git e curl se não tiver
+for pkg in proot-distro git curl; do
+    if ! command -v $pkg &> /dev/null; then
+        echo "Instalando $pkg..."
+        apt install -y $pkg
+    else
+        echo "$pkg já instalado."
+    fi
+done
+sleep 1
+
+###############################
 # Perguntar nome do usuário
 read -p "Nome do usuário a criar: " USERNAME
 
@@ -11,26 +29,20 @@ read -p "Deseja definir senha? (s/n): " ASKPASS
 
 ###############################
 clear
-echo "[1/10] Atualizando Termux..."
-apt update && apt upgrade -y
+echo "[1/11] Instalando getnf..."
+apt install getnf -y
 sleep 1
 
 ###############################
 clear
-echo "[2/10] Instalando dependências..."
-apt install getnf git curl proot-distro -y
-sleep 1
-
-###############################
-clear
-echo "[3/10] Executando getnf para escolher fonte..."
+echo "[2/11] Executando getnf para escolher fonte..."
 echo "Escolha a fonte desejada quando o getnf abrir..."
 getnf
 sleep 1
 
 ###############################
 clear
-echo "[4/10] Aplicando tema Cherry Midnight no Termux..."
+echo "[3/11] Aplicando tema Cherry Midnight no Termux..."
 mkdir -p ~/.termux
 cat > ~/.termux/colors.properties <<EOL
 # Cherry Midnight colors
@@ -58,28 +70,28 @@ sleep 1
 
 ###############################
 clear
-echo "[5/10] Instalando Arch Linux..."
+echo "[4/11] Instalando Arch Linux..."
 proot-distro install archlinux
 echo "Arch Linux: [OK]"
 sleep 1
 
 ###############################
 clear
-echo "[6/10] Atualizando Arch e instalando pacotes básicos..."
+echo "[5/11] Atualizando Arch e instalando pacotes básicos..."
 proot-distro exec archlinux -- pacman -Syu --noconfirm
 proot-distro exec archlinux -- pacman -S sudo nano curl git fish --noconfirm
 sleep 1
 
 ###############################
 clear
-echo "[7/10] Instalando bun runtime..."
+echo "[6/11] Instalando bun runtime..."
 proot-distro exec archlinux -- bash -c "curl -fsSL https://bun.sh/install | bash"
 proot-distro exec archlinux -- bash -c "echo 'export PATH=\$HOME/.bun/bin:\$PATH' >> /etc/fish/config.fish"
 sleep 1
 
 ###############################
 clear
-echo "[8/10] Criando usuário $USERNAME..."
+echo "[7/11] Criando usuário $USERNAME..."
 proot-distro exec archlinux -- useradd -m -s /usr/bin/fish "$USERNAME"
 proot-distro exec archlinux -- usermod -aG sudo "$USERNAME"
 
@@ -110,17 +122,17 @@ sleep 1
 
 ###############################
 clear
-echo "[9/10] Baixando repositório test e copiando para fastfetch config..."
+echo "[8/11] Baixando repositório test e copiando para fastfetch config..."
 proot-distro exec archlinux -- mkdir -p /home/"$USERNAME"/.config/fastfetch
 git clone https://github.com/lzxv2/test /tmp/testrepo
 proot-distro exec archlinux -- cp -r /tmp/testrepo/* /home/"$USERNAME"/.config/fastfetch/
-proot-distro exec archlinux -- chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.config/fastfetch
+proot-distro exec archlinux -- chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.config/fastfetch/
 rm -rf /tmp/testrepo
 sleep 1
 
 ###############################
 clear
-echo "[10/10] Definindo fish como shell padrão e login automático..."
+echo "[9/11] Definindo fish como shell padrão e login automático..."
 proot-distro exec archlinux -- chsh -s /usr/bin/fish "$USERNAME"
 grep -qxF "proot-distro login archlinux --user $USERNAME" ~/.bashrc || \
     echo "proot-distro login archlinux --user $USERNAME" >> ~/.bashrc
@@ -128,7 +140,13 @@ sleep 1
 
 ###############################
 clear
-echo "Setup finalizado com sucesso!"
+echo "[10/11] Limpeza e finalizações..."
+# Nenhum comando adicional por enquanto
+sleep 1
+
+###############################
+clear
+echo "[11/11] Setup finalizado com sucesso!"
 echo "Usuário $USERNAME criado, fish definido como shell padrão, bun instalado."
 echo "Fastfetch configurado com repositório test e tema Cherry Midnight aplicado no Termux."
 echo "Ao abrir o Termux, você entrará automaticamente no Arch Linux como $USERNAME."
